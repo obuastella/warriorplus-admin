@@ -1,9 +1,9 @@
 import {
-  BookHeart,
-  Home,
+  FileDown,
+  LayoutDashboard,
   LogOut,
+  PillBottle,
   Settings,
-  TriangleAlert,
   Users,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -31,29 +31,30 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       {/* Navigation Items */}
       <div className="text-black flex flex-col space-y-4">
         <SidebarItem
-          icon={<Home size={20} />}
-          label="Home"
+          icon={<LayoutDashboard size={20} />}
+          label="Overview"
           to="/dashboard"
           isCollapsed={isCollapsed}
         />
         <SidebarItem
-          icon={<BookHeart size={20} />}
-          label="Journal"
-          to="/journal"
-          isCollapsed={isCollapsed}
-        />
-        <SidebarItem
           icon={<Users size={20} />}
-          label="Community"
-          to="/community"
+          label="Analytics"
+          to="/analytics"
           isCollapsed={isCollapsed}
         />
         <SidebarItem
-          icon={<TriangleAlert size={20} />}
-          label="SOS"
-          to="/sos"
+          icon={<PillBottle size={20} />}
+          label="Medication"
+          to="/medication-analysis"
           isCollapsed={isCollapsed}
         />
+        <SidebarItem
+          icon={<FileDown size={20} />}
+          label="Export"
+          to="/export"
+          isCollapsed={isCollapsed}
+        />
+
         <SidebarItem
           icon={<Settings size={20} />}
           label="Settings"
@@ -94,7 +95,7 @@ export function SidebarItem({
       to={to}
       className={`flex items-center p-2 rounded transition-all hover:bg-primary/20 ${
         isActive ? "text-black font-semibold bg-white" : "text-black"
-      } hover:text-white`}
+      } hover:text-secondary`}
     >
       <div className="w-6 flex justify-center">{icon}</div>
       <span
