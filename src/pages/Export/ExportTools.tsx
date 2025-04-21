@@ -234,7 +234,7 @@ export default function ExportTools() {
               {fileFormats.map((format) => (
                 <button
                   key={format.id}
-                  className="flex items-center space-x-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center space-x-2 px-4 py-2 border rounded-lg hover:bg-purple-100 hover:border-purple-600"
                 >
                   {format.icon}
                   <span>{format.label}</span>
