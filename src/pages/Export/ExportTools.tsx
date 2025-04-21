@@ -245,7 +245,7 @@ export default function ExportTools() {
 
           {/* Export Button */}
           <div className="pt-4 border-t">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-y-4 items-center justify-between">
               <div>
                 <h4 className="font-medium">Data Export Ready</h4>
                 <p className="text-sm text-gray-500">
