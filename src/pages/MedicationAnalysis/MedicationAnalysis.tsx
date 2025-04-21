@@ -40,10 +40,7 @@ export default function MedicationAnalysis() {
       {/* Medication View Tabs */}
       <div className="mb-4 border-b border-gray-200">
         <nav className="flex space-x-8">
-          {[
-            { id: "usage", name: "Usage Distribution" },
-            { id: "efficacy", name: "Efficacy & Side Effects" },
-          ].map((tab) => (
+          {[{ id: "usage", name: "Usage Distribution" }].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setMedicationView(tab.id)}
@@ -162,39 +159,6 @@ export default function MedicationAnalysis() {
                 </ul>
               </div>
             </div>
-          </>
-        )}
-
-        {medicationView === "efficacy" && (
-          <>
-            <h3 className="text-lg font-medium mb-4">
-              Medication Efficacy vs Side Effects
-            </h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart
-                data={medicationUsageData}
-                margin={{ top: 20, right: 30, left: 2, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis yAxisId="left" orientation="left" stroke="#9333EA" />
-                <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  yAxisId="left"
-                  dataKey="efficacy"
-                  name="Efficacy %"
-                  fill="#9333EA"
-                />
-                <Bar
-                  yAxisId="right"
-                  dataKey="sideEffects"
-                  name="Side Effects %"
-                  fill="#1D4ED8"
-                />
-              </BarChart>
-            </ResponsiveContainer>
           </>
         )}
       </div>
