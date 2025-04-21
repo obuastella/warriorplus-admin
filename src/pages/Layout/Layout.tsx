@@ -20,7 +20,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Mobile Hamburger Button */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm h-14">
         <button
-          className="m-4 text-primary absolute left-0"
+          className="m-4 text-secondary absolute left-0"
           onClick={() => setSidebarOpen(!isSidebarOpen)}
         >
           {isSidebarOpen ? <X size={28} /> : <Menu size={28} />}
