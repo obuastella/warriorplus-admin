@@ -3,7 +3,6 @@ import {
   Users,
   Calendar,
   Clock,
-  MapPin,
   Activity,
   ChevronDown,
   BarChart2,
@@ -292,55 +291,6 @@ export default function UserAnalytics() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Geographic Distribution */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">
-                  Geographic Distribution
-                </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 h-80 flex items-center justify-center border border-dashed rounded">
-                    {/* In a real app, you would render a map chart here */}
-                    <div className="text-center">
-                      <MapPin
-                        size={48}
-                        className="text-gray-300 mx-auto mb-2"
-                      />
-                      <p className="text-gray-500">User Location Map</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-md font-medium mb-3">Top Locations</h4>
-                    <div className="space-y-3">
-                      {userStats.topLocations.map((location, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs w-5 h-5 flex items-center justify-center bg-gray-100 rounded-full">
-                              {index + 1}
-                            </span>
-                            <span>{location.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
-                              {location.count}
-                            </span>
-                            <span className="text-xs text-gray-500">users</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button className="w-full mt-4 text-sm text-purple-600 hover:text-purple-800 flex items-center justify-center gap-1">
-                      <span>View all locations</span>
-                      <ChevronDown size={14} />
-                    </button>
                   </div>
                 </div>
               </div>
