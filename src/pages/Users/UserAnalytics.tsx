@@ -1,25 +1,22 @@
+//@ts-nocheck
 import { useState } from "react";
 import {
   Users,
-  Calendar,
   Clock,
   Activity,
-  ChevronDown,
-  BarChart2,
   UserCheck,
   RefreshCw,
   AlertCircle,
-  ChartArea,
   TrendingUp,
   Thermometer,
   Wind,
+  Filter,
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function UserAnalytics() {
   const [dateRange, setDateRange] = useState("last30");
-  const [activeTab, setActiveTab] = useState("demographics");
-  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("behavior");
 
   // Sample data - in a real app, this would come from your API
   const userStats = {
@@ -47,9 +44,10 @@ export default function UserAnalytics() {
   };
 
   // Tabs for different analysis views
-  const analyticsTabs = [
-    { id: "demographics", label: "Demographics" },
-    { id: "behavior", label: "User Behavior" },
+  const analyticsTabs = [{ id: "behavior", label: "User Behavior" }];
+  const sessionData = [
+    { name: "Engaged", value: 15 },
+    { name: "Idle", value: 5 },
   ];
   const triggerData = [
     { name: "Weather Changes", value: 35 },
@@ -58,82 +56,27 @@ export default function UserAnalytics() {
     { name: "Stress", value: 15 },
     { name: "Other", value: 5 },
   ];
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+  const COLORS = ["#a65553", "#93C5FD", "#FFBB28", "#FF8042", "#8884d8"];
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-20 md:mb-0">
       {/* Header area with title and filters */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">User Analytics</h2>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <div
-              className="flex items-center gap-2 bg-white border rounded-lg px-4 py-2 cursor-pointer"
-              onClick={() => setFilterOpen(!filterOpen)}
+          <div className="flex items-center space-x-2 bg-white border rounded-lg px-3 py-2">
+            <Filter size={16} className="text-gray-500" />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="text-sm border-none focus:ring-0 focus:outline-none"
             >
-              <Calendar size={16} className="text-gray-500" />
-              <span className="text-sm">
-                {dateRange === "last30" ? "Last 30 days" : "Custom range"}
-              </span>
-              <ChevronDown size={16} className="text-gray-500" />
-            </div>
-
-            {filterOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border rounded-lg shadow-lg z-10 p-3">
-                <div className="space-y-2">
-                  <button
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm"
-                    onClick={() => {
-                      setDateRange("last7");
-                      setFilterOpen(false);
-                    }}
-                  >
-                    Last 7 days
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm"
-                    onClick={() => {
-                      setDateRange("last30");
-                      setFilterOpen(false);
-                    }}
-                  >
-                    Last 30 days
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm"
-                    onClick={() => {
-                      setDateRange("last90");
-                      setFilterOpen(false);
-                    }}
-                  >
-                    Last 90 days
-                  </button>
-                  <hr className="my-2" />
-                  <div className="p-2">
-                    <p className="text-xs font-medium mb-2">Custom range</p>
-                    <div className="flex gap-2">
-                      <input
-                        type="date"
-                        className="border rounded p-1 text-xs flex-1"
-                      />
-                      <input
-                        type="date"
-                        className="border rounded p-1 text-xs flex-1"
-                      />
-                    </div>
-                    <button
-                      className="mt-2 w-full bg-purple-500 text-white rounded py-1 text-xs"
-                      onClick={() => {
-                        setDateRange("custom");
-                        setFilterOpen(false);
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+              <option value="last7">Last 7 days</option>
+              <option value="last30">Last 30 days</option>
+              <option value="last90">Last 90 days</option>
+              <option value="lastYear">Last year</option>
+              <option value="allTime">All time</option>
+            </select>
           </div>
         </div>
       </div>
@@ -216,7 +159,7 @@ export default function UserAnalytics() {
 
       {/* Analytics Tabs */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="border-b">
+        <div className="border-b border-primary">
           <nav className="flex overflow-x-auto">
             {analyticsTabs.map((tab) => (
               <button
@@ -235,61 +178,52 @@ export default function UserAnalytics() {
         </div>
 
         <div className="p-6">
-          {/* Demographics Tab Content */}
-          {activeTab === "demographics" && (
+          {/* User Behavior Tab Content */}
+          {activeTab === "behavior" && (
             <div className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Age Distribution */}
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                {/* Session Duration */}
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Age Distribution</h3>
-                  <div className="h-64 flex items-center justify-center border border-dashed rounded">
-                    {/* In a real app, you would render a chart library here */}
-                    <div className="text-center">
-                      <BarChart2
-                        size={48}
-                        className="text-gray-300 mx-auto mb-2"
-                      />
-                      <p className="text-gray-500">Age Distribution Chart</p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Average Age: {userStats.averageAge}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gender Distribution */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4">
-                    Gender Distribution
-                  </h3>
-                  <div className="h-64 flex items-center justify-center border border-dashed rounded">
-                    {/* In a real app, you would render a chart library here */}
-                    <div className="text-center">
-                      <ChartArea
-                        size={48}
-                        className="text-gray-300 mx-auto mb-2"
-                      />
-                      <p className="text-gray-500">Gender Distribution Chart</p>
-                      <div className="flex justify-center gap-4 mt-2">
-                        <div className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full bg-blue-400"></span>
-                          <span className="text-xs">
-                            Male {userStats.genderDistribution.male}%
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full bg-purple-400"></span>
-                          <span className="text-xs">
-                            Female {userStats.genderDistribution.female}%
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                          <span className="text-xs">
-                            Other {userStats.genderDistribution.other}%
-                          </span>
-                        </div>
+                  <h3 className="text-lg font-medium mb-4">Session Duration</h3>
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <p className="text-sm text-gray-500">Average Session</p>
+                        <h3 className="text-2xl font-bold">
+                          {userStats.avgSessionDuration}
+                        </h3>
                       </div>
+                      <div className="p-3 rounded-full bg-blue-100">
+                        <Clock size={24} className="text-blue-500" />
+                      </div>
+                    </div>
+                    <div className="h-40 flex items-center justify-center">
+                      {/* In a real app, you would render a chart here */}
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={sessionData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) =>
+                              `${name}: ${(percent * 100).toFixed(0)}%`
+                            }
+                          >
+                            {sessionData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      {/* <p className="text-gray-500">Session Duration Chart</p> */}
                     </div>
                   </div>
                 </div>
@@ -356,66 +290,11 @@ export default function UserAnalytics() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* User Behavior Tab Content */}
-          {activeTab === "behavior" && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Session Duration */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Session Duration</h3>
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <p className="text-sm text-gray-500">Average Session</p>
-                        <h3 className="text-2xl font-bold">
-                          {userStats.avgSessionDuration}
-                        </h3>
-                      </div>
-                      <div className="p-3 rounded-full bg-blue-100">
-                        <Clock size={24} className="text-blue-500" />
-                      </div>
-                    </div>
-                    <div className="h-40 flex items-center justify-center">
-                      {/* In a real app, you would render a chart here */}
-                      <p className="text-gray-500">Session Duration Chart</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sessions Per User */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4">
-                    Sessions Per User
-                  </h3>
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <p className="text-sm text-gray-500">
-                          Average Sessions
-                        </p>
-                        <h3 className="text-2xl font-bold">
-                          {userStats.sessionsPerUser} per week
-                        </h3>
-                      </div>
-                      <div className="p-3 rounded-full bg-purple-100">
-                        <RefreshCw size={24} className="text-purple-500" />
-                      </div>
-                    </div>
-                    <div className="h-40 flex items-center justify-center">
-                      {/* In a real app, you would render a chart here */}
-                      <p className="text-gray-500">Sessions Per User Chart</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Usage Patterns */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Usage Patterns</h3>
-                <div className="bg-white border rounded-lg overflow-hidden">
+                <div className="bg-white border border-primary rounded-lg overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
