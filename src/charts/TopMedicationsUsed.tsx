@@ -12,8 +12,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { db } from "../components/firebase";
+import useAdminStatsData from "../hooks/useAdminStatsData";
+import { useAdminStatsStore } from "../store/useAdminStatsStore";
 
 export default function TopMedicationsUsed() {
+  useAdminStatsData();
+  const { stats } = useAdminStatsStore();
   const [medicationData, setMedicationData] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
@@ -170,13 +174,7 @@ export default function TopMedicationsUsed() {
           <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="flex justify-between text-sm text-gray-600">
               <span>Total Medications: {medicationData.length}</span>
-              <span>
-                Total Patients:{" "}
-                {medicationData.reduce(
-                  (sum: any, med: any) => sum + med.patients,
-                  0
-                )}
-              </span>
+              <span>Total Patients:s {stats[0]?.totalMembers}</span>
             </div>
           </div>
         </>

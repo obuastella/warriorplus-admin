@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileDown, Users, Settings } from "lucide-react";
+import { LayoutDashboard, FileDown, PillBottle, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function BottomNav() {
@@ -6,7 +6,7 @@ export default function BottomNav() {
 
   const navItems = [
     { to: "/dashboard", icon: <LayoutDashboard />, label: "Overview" },
-    { to: "/analytics", icon: <Users />, label: "Analytics" },
+    { to: "/medication-analysis", icon: <PillBottle />, label: "Analytics" },
     { to: "/export", icon: <FileDown />, label: "Export" },
     { to: "/settings", icon: <Settings />, label: "Profile" },
   ];
