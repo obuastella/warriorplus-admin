@@ -4,7 +4,6 @@ import {
   LogOut,
   PillBottle,
   Settings,
-  Users,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "./firebase";
@@ -36,12 +35,12 @@ export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
           to="/dashboard"
           isCollapsed={isCollapsed}
         />
-        <SidebarItem
+        {/* <SidebarItem
           icon={<Users size={20} />}
           label="Analytics"
           to="/analytics"
           isCollapsed={isCollapsed}
-        />
+        /> */}
         <SidebarItem
           icon={<PillBottle size={20} />}
           label="Medication"

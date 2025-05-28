@@ -11,7 +11,6 @@ import ExportTools from "./pages/Export/ExportTools";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { auth } from "./components/firebase";
-import UserAnalytics from "./pages/Users/UserAnalytics";
 import MedicationAnalysis from "./pages/MedicationAnalysis/MedicationAnalysis";
 import Settings from "./pages/Settings/Settings";
 
@@ -37,14 +36,14 @@ export default function App() {
             </Layout>
           }
         />
-        <Route
+        {/* <Route
           path="/analytics"
           element={
             <Layout>
               <UserAnalytics />
             </Layout>
           }
-        />
+        /> */}
         <Route
           path="/medication-analysis"
           element={
