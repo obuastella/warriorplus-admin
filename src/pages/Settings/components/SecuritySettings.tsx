@@ -3,6 +3,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import PasswordInput from "../../../components/PasswordInput";
 import { ValidateSignlePassword } from "../../../utils/ValidateSinglePassword";
+import {
+  getAuth,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 
 export default function SecuritySettings() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -26,15 +32,42 @@ export default function SecuritySettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      toast.success("Password updated successfully");
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user || !user.email) {
+      toast.error("User not authenticated.");
       setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Step 1: Re-authenticate
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+      await reauthenticateWithCredential(user, credential);
+
+      // Step 2: Update password
+      await updatePassword(user, newPassword);
+
+      toast.success("Password updated successfully");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setPasswordError("");
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message);
+    } catch (error: any) {
+      // console.error(error);
+      if (error.code === "auth/wrong-password") {
+        toast.error("Current password is incorrect.");
+      } else if (error.code === "auth/weak-password") {
+        toast.error("Password should be at least 6 characters.");
+      } else {
+        toast.error("Incorrect Password. Try again.");
+      }
+    } finally {
       setIsLoading(false);
     }
   };

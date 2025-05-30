@@ -11,40 +11,12 @@ export default function LoginForm() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   const payload = {
-  //     email: email,
-  //     password: password,
-  //   };
-  //   try {
-  //     console.log("Payload:", payload);
-  //     await signInWithEmailAndPassword(auth, email, password);
-  //     console.log("User logged in succesfully!");
-  //     toast.success("User logged in successfully");
-  //     navigate("/dashboard");
-  //     setIsLoading(false);
-  //   } catch (error: any) {
-  //     console.log(error.message);
-  //     toast.error(error.message, {
-  //       position: "top-right",
-  //     });
-  //     setIsLoading(false);
-  //   }
-  // };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const payload = {
-      email: email,
-      password: password,
-    };
-
     try {
-      console.log("Payload:", payload);
-
       // Step 1: Try to sign in with Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -52,8 +24,6 @@ export default function LoginForm() {
         password
       );
       const user = userCredential.user;
-
-      console.log("Firebase Auth successful for:", user.email);
 
       // Step 2: Check if user exists in Users collection and has correct role
       const usersRef = collection(db, "Users");
@@ -70,7 +40,7 @@ export default function LoginForm() {
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
 
-      console.log("User found:", userData);
+      // console.log("User found:", userData);
 
       // Step 4: Check if user is an admin
       if (userData.role !== "admin") {
@@ -80,7 +50,7 @@ export default function LoginForm() {
       }
 
       // Step 5: Success - user is authenticated and has admin role
-      console.log("Admin user logged in successfully!");
+      // console.log("Admin user logged in successfully!");
       toast.success("User logged in successfully");
 
       // Store user info for the session
