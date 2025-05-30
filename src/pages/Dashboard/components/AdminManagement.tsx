@@ -137,10 +137,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../../components/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../../components/firebase";
 import emailjs from "emailjs-com";
 import { toast } from "react-toastify";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function AdminManagement() {
   const [showAddAdmin, setShowAddAdmin] = useState(false);
@@ -181,34 +182,6 @@ export default function AdminManagement() {
     }
   };
 
-  // Function to save user to Firestore Users collection
-  const saveUserToFirestore = async (email: any) => {
-    try {
-      // Check if user already exists in Firestore
-      const usersRef = collection(db, "Users");
-      const q = query(usersRef, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        throw new Error("User already exists in database");
-      }
-
-      // Add new admin user to Firestore
-      const docRef = await addDoc(collection(db, "Users"), {
-        email: email,
-        isVerified: true,
-        role: "admin",
-        createdAt: new Date(),
-        defaultPassword: "Qwerty123!", // Store this for reference, but user should change it
-      });
-
-      return { id: docRef.id, email };
-    } catch (error) {
-      console.error("Firestore save failed:", error);
-      throw error;
-    }
-  };
-
   // Show notification
   const showNotification = (type: any, message: any) => {
     setNotification({ type, message });
@@ -217,6 +190,48 @@ export default function AdminManagement() {
     }, 5000);
   };
 
+  const removeAdmin = (id: any) => {
+    setAdmins(admins.filter((admin) => admin.id !== id));
+    showNotification("success", "Admin removed successfully");
+  };
+  //
+  // Function to create admin user in Firebase Auth + Firestore
+  const createAdminUser = async (email: any) => {
+    try {
+      const defaultPassword = "Qwerty123!";
+
+      // Step 1: Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        defaultPassword
+      );
+      const user = userCredential.user;
+
+      console.log("Firebase Auth user created:", user.uid);
+
+      // Step 2: Save user data to Firestore with the same UID as document ID
+      await setDoc(doc(db, "Users", user.uid), {
+        email: email,
+        isVerified: true,
+        role: "admin",
+        createdAt: new Date(),
+        needsPasswordChange: true, // Flag to force password change on first login
+      });
+
+      // Step 3: Sign out the newly created user (so current admin stays logged in)
+      await auth.signOut();
+
+      console.log("Admin user created successfully");
+      toast.success("Admin user created successfully");
+      return { id: user.uid, email };
+    } catch (error) {
+      console.error("Admin creation failed:", error);
+      throw error;
+    }
+  };
+
+  // Updated handleAddAdmin function
   const handleAddAdmin = async (e: any) => {
     e.preventDefault();
 
@@ -225,7 +240,7 @@ export default function AdminManagement() {
       return;
     }
 
-    // Check if admin already exists
+    // Check if admin already exists in local state
     if (admins.some((admin) => admin.email === adminEmail)) {
       showNotification("error", "This email is already an admin");
       return;
@@ -234,9 +249,8 @@ export default function AdminManagement() {
     setIsLoading(true);
 
     try {
-      console.log("user email", adminEmail);
-      // Step 1: Save user to Firestore
-      await saveUserToFirestore(adminEmail);
+      // Step 1: Create user in Firebase Auth and Firestore
+      await createAdminUser(adminEmail);
 
       // Step 2: Send invitation email
       await sendAdminInviteEmail(adminEmail);
@@ -257,21 +271,20 @@ export default function AdminManagement() {
         "success",
         `Admin invitation sent successfully to ${adminEmail}`
       );
-      toast.success(`Admin invitation sent successfully to ${adminEmail}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding admin:", error);
-      showNotification("error", "Admin User already exist");
-      toast.error("Admin User already exist");
+
+      let errorMessage = "Failed to add admin. Please try again.";
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage =
+          "This email is already registered. User may already exist.";
+      }
+
+      showNotification("error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const removeAdmin = (id: any) => {
-    setAdmins(admins.filter((admin) => admin.id !== id));
-    showNotification("success", "Admin removed successfully");
-  };
-
   return (
     <div className="space-y-6">
       {/* Notification */}

@@ -2,31 +2,115 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { toast } from "react-toastify";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../../../components/firebase";
+import { auth, db } from "../../../../components/firebase";
 import { useNavigate } from "react-router-dom";
+import { collection, query, where, getDocs } from "firebase/firestore";
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   const payload = {
+  //     email: email,
+  //     password: password,
+  //   };
+  //   try {
+  //     console.log("Payload:", payload);
+  //     await signInWithEmailAndPassword(auth, email, password);
+  //     console.log("User logged in succesfully!");
+  //     toast.success("User logged in successfully");
+  //     navigate("/dashboard");
+  //     setIsLoading(false);
+  //   } catch (error: any) {
+  //     console.log(error.message);
+  //     toast.error(error.message, {
+  //       position: "top-right",
+  //     });
+  //     setIsLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+
     const payload = {
       email: email,
       password: password,
     };
+
     try {
       console.log("Payload:", payload);
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("User logged in succesfully!");
+
+      // Step 1: Try to sign in with Firebase Authentication
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      console.log("Firebase Auth successful for:", user.email);
+
+      // Step 2: Check if user exists in Users collection and has correct role
+      const usersRef = collection(db, "Users");
+      const q = query(usersRef, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        // Sign out if no user record found
+        await auth.signOut();
+        throw new Error("No user record found. Please contact administrator.");
+      }
+
+      // Step 3: Get user data and verify role
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      console.log("User found:", userData);
+
+      // Step 4: Check if user is an admin
+      if (userData.role !== "admin") {
+        // Sign out if not admin
+        await auth.signOut();
+        throw new Error("Access denied. Admin privileges required.");
+      }
+
+      // Step 5: Success - user is authenticated and has admin role
+      console.log("Admin user logged in successfully!");
       toast.success("User logged in successfully");
+
+      // Store user info for the session
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify({
+          id: userDoc.id,
+          uid: user.uid,
+          email: userData.email,
+          role: userData.role,
+          isVerified: userData.isVerified,
+        })
+      );
+
       navigate("/dashboard");
       setIsLoading(false);
     } catch (error: any) {
-      console.log(error.message);
-      toast.error(error.message, {
+      console.log("Login error:", error.message);
+
+      // Handle specific Firebase Auth errors
+      let errorMessage = error.message;
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email address.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address.";
+      }
+
+      toast.error(errorMessage, {
         position: "top-right",
       });
       setIsLoading(false);
