@@ -1,8 +1,6 @@
 import {
   Shield,
   UserPlus,
-  Users,
-  X,
   Mail,
   Loader2,
   CheckCircle,
@@ -14,6 +12,7 @@ import { auth, db } from "../../../components/firebase";
 import emailjs from "emailjs-com";
 import { toast } from "react-toastify";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import FetchAdmins from "../functions/FetchAdmins";
 
 export default function AdminManagement() {
   const [showAddAdmin, setShowAddAdmin] = useState(false);
@@ -62,11 +61,6 @@ export default function AdminManagement() {
     }, 5000);
   };
 
-  const removeAdmin = (id: any) => {
-    setAdmins(admins.filter((admin) => admin.id !== id));
-    showNotification("success", "Admin removed successfully");
-  };
-  //
   // Function to create admin user in Firebase Auth + Firestore
   const createAdminUser = async (email: any) => {
     try {
@@ -79,9 +73,6 @@ export default function AdminManagement() {
         defaultPassword
       );
       const user = userCredential.user;
-
-      // console.log("Firebase Auth user created:", user.uid);
-
       // Step 2: Do ALL Firestore writes BEFORE signing out
       // Main user document
       await setDoc(doc(db, "Users", user.uid), {
@@ -218,33 +209,7 @@ export default function AdminManagement() {
           </button>
         </div>
 
-        {/* Current Admins List */}
-        <div className="space-y-3 mb-6">
-          {admins.map((admin) => (
-            <div
-              key={admin.id}
-              className="flex items-center justify-between bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center">
-                <div className="bg-indigo-100 p-2 rounded-full mr-3">
-                  <Users size={16} className="text-indigo-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">{admin.email}</p>
-                  <p className="text-sm text-gray-500">{admin.role}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => removeAdmin(admin.id)}
-                disabled={isLoading}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed p-2 rounded-lg transition-colors"
-                title="Remove admin"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          ))}
-        </div>
+        <FetchAdmins />
 
         {/* Add Admin Form */}
         {showAddAdmin && (
