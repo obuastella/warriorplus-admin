@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Loader } from "lucide-react";
 import { toast } from "react-toastify";
 import { auth, db } from "../../../components/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 export default function UpdateProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<any>({
@@ -37,11 +37,26 @@ export default function UpdateProfile() {
   const updateProfile = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("User not authenticated.");
+        setIsLoading(false);
+        return;
+      }
+
+      const userRef = doc(db, "Users", user.uid);
+      await updateDoc(userRef, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
+
       toast.success("Profile info updated successfully!");
-      setIsLoading(false);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message);
+      console.error("Error updating profile:", e);
+      toast.error("Failed to update profile.");
+    } finally {
       setIsLoading(false);
     }
   };

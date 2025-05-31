@@ -56,7 +56,7 @@ export default function FetchAdmins() {
       },
       (error) => {
         console.error("Error listening to admins:", error);
-        toast.error("Failed to load admin users");
+        // toast.error("Failed to load admin users");
         setIsLoadingAdmins(false);
       }
     );

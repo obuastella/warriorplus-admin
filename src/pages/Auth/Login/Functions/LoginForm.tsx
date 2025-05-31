@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../../../components/firebase";
 import { useNavigate } from "react-router-dom";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { getDoc, doc } from "firebase/firestore";
 export default function LoginForm() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
@@ -25,39 +25,48 @@ export default function LoginForm() {
       );
       const user = userCredential.user;
 
-      // Step 2: Check if user exists in Users collection and has correct role
-      const usersRef = collection(db, "Users");
-      const q = query(usersRef, where("email", "==", email));
-      const querySnapshot = await getDocs(q);
+      // Step 2: Get user document directly using UID (no query needed)
+      const userDocRef = doc(db, "Users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (querySnapshot.empty) {
+      if (!userDocSnap.exists()) {
         // Sign out if no user record found
         await auth.signOut();
-        throw new Error("No user record found. Please contact administrator.");
+        toast.error("No user record found. Please contact administrator.", {
+          position: "top-right",
+        });
+        setIsLoading(false);
+        return;
       }
 
       // Step 3: Get user data and verify role
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-
-      // console.log("User found:", userData);
+      const userData = userDocSnap.data();
 
       // Step 4: Check if user is an admin
       if (userData.role !== "admin") {
         // Sign out if not admin
         await auth.signOut();
-        throw new Error("Access denied. Admin privileges required.");
+
+        // Show warning toast and stay on current page
+        toast.warning("You are not authorized to access this page", {
+          position: "top-right",
+        });
+        setIsLoading(false);
+        navigate("/");
+
+        return;
       }
 
       // Step 5: Success - user is authenticated and has admin role
-      // console.log("Admin user logged in successfully!");
-      toast.success("User logged in successfully");
+      toast.success("User logged in successfully", {
+        position: "top-right",
+      });
 
       // Store user info for the session
       localStorage.setItem(
         "currentUser",
         JSON.stringify({
-          id: userDoc.id,
+          id: userDocSnap.id,
           uid: user.uid,
           email: userData.email,
           role: userData.role,
@@ -66,24 +75,10 @@ export default function LoginForm() {
       );
 
       navigate("/dashboard");
-      setIsLoading(false);
     } catch (error: any) {
-      console.log("Login error:", error.message);
-
-      // Handle specific Firebase Auth errors
-      let errorMessage = error.message;
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email address.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address.";
-      }
-
-      toast.error(errorMessage, {
-        position: "top-right",
-      });
+      console.error("Login error:", error);
       setIsLoading(false);
+      toast.error("Invalid email/password");
     }
   };
   return (
