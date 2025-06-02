@@ -7,7 +7,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { doc, increment, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  increment,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { auth, db } from "../../../components/firebase";
 import emailjs from "emailjs-com";
 import { toast } from "react-toastify";
@@ -19,10 +28,7 @@ export default function AdminManagement() {
   const [adminEmail, setAdminEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ type: "", message: "" });
-  const [admins, setAdmins] = useState([
-    { id: 1, email: "admin@company.com", role: "Super Admin" },
-    { id: 2, email: "manager@company.com", role: "Manager" },
-  ]);
+  const [admins, setAdmins] = useState<any>([]);
 
   // Function to send email using EmailJS
   const sendAdminInviteEmail = async (email: any) => {
@@ -126,48 +132,151 @@ export default function AdminManagement() {
     }
 
     // Check if admin already exists in local state
-    if (admins.some((admin) => admin.email === adminEmail)) {
+    if (admins.some((admin: any) => admin.email === adminEmail)) {
       showNotification("error", "This email is already an admin");
       return;
     }
 
     setIsLoading(true);
 
+    // try {
+    //   // Step 1: Create user in Firebase Auth and Firestore
+    //   await createAdminUser(adminEmail);
+
+    //   // Step 2: Send invitation email
+    //   await sendAdminInviteEmail(adminEmail);
+
+    //   // Step 3: Add to local state
+    //   const newAdmin = {
+    //     id: Date.now(),
+    //     email: adminEmail,
+    //     role: "Admin",
+    //   };
+    //   setAdmins([...admins, newAdmin]);
+
+    //   // Reset form
+    //   setAdminEmail("");
+    //   setShowAddAdmin(false);
+
+    //   showNotification(
+    //     "success",
+    //     `Admin invitation sent successfully to ${adminEmail}`
+    //   );
+    // } catch (error: any) {
+    //   console.error("Error adding admin:", error);
+
+    //   let errorMessage = "Failed to add admin. Please try again.";
+    //   if (error.code === "auth/email-already-in-use") {
+    //     errorMessage =
+    //       "This email is already registered. User may already exist.";
+    //   }
+
+    //   showNotification("error", errorMessage);
+    // } finally {
+    //   setIsLoading(false);
+    // }
     try {
-      // Step 1: Create user in Firebase Auth and Firestore
-      await createAdminUser(adminEmail);
+      // Step 1: Check if user already exists in Users collection
+      const existingUser = await checkUserExists(adminEmail);
 
-      // Step 2: Send invitation email
-      await sendAdminInviteEmail(adminEmail);
+      if (existingUser) {
+        // User exists - update their role to admin
+        await updateUserRole(adminEmail, "admin");
 
-      // Step 3: Add to local state
-      const newAdmin = {
-        id: Date.now(),
+        // Step 2: Send notification email (optional - you might want different messaging)
+        await sendAdminRoleUpdateEmail(adminEmail);
+
+        showNotification(
+          "success",
+          `Admin invitation sent successfully to ${adminEmail}.`
+        );
+      } else {
+        // User doesn't exist - create new admin user
+        await createAdminUser(adminEmail);
+
+        // Step 2: Send invitation email
+        await sendAdminInviteEmail(adminEmail);
+
+        showNotification(
+          "success",
+          `Admin invitation sent successfully to ${adminEmail}`
+        );
+      }
+
+      // Step 3: Add/Update in local state
+      const adminData = {
+        id: existingUser ? existingUser.id : Date.now(),
         email: adminEmail,
-        role: "Admin",
+        role: "admin",
       };
-      setAdmins([...admins, newAdmin]);
+
+      if (existingUser) {
+        // Update existing admin in local state
+        setAdmins(
+          admins.map((admin: any) =>
+            admin.email === adminEmail ? { ...admin, role: "admin" } : admin
+          )
+        );
+      } else {
+        // Add new admin to local state
+        setAdmins([...admins, adminData]);
+      }
 
       // Reset form
       setAdminEmail("");
       setShowAddAdmin(false);
-
-      showNotification(
-        "success",
-        `Admin invitation sent successfully to ${adminEmail}`
-      );
     } catch (error: any) {
-      console.error("Error adding admin:", error);
+      console.error("Error managing admin user:", error);
+      showNotification(
+        "error",
+        `Failed to process admin user: ${error.message}`
+      );
+    }
 
-      let errorMessage = "Failed to add admin. Please try again.";
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage =
-          "This email is already registered. User may already exist.";
+    // Helper functions you'll need to implement:
+
+    async function checkUserExists(email: any) {
+      try {
+        const usersRef = collection(db, "Users");
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          return { id: userDoc.id, ...userDoc.data() };
+        }
+        return null;
+      } catch (error) {
+        console.error("Error checking user existence:", error);
+        throw error;
       }
+    }
 
-      showNotification("error", errorMessage);
-    } finally {
-      setIsLoading(false);
+    async function updateUserRole(email: any, newRole: any) {
+      try {
+        const usersRef = collection(db, "Users");
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          await updateDoc(doc(db, "Users", userDoc.id), {
+            role: newRole,
+            updatedAt: new Date(),
+          });
+        }
+      } catch (error) {
+        console.error("Error updating user role:", error);
+        throw error;
+      }
+    }
+
+    async function sendAdminRoleUpdateEmail(email: any) {
+      try {
+        await sendAdminInviteEmail(email);
+      } catch (error: any) {
+        console.error("Error sending role update email:", error);
+      }
     }
   };
   return (

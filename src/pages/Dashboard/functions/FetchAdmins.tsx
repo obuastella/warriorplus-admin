@@ -94,7 +94,7 @@ export default function FetchAdmins() {
 
       // Update the user's role to "user"
       await updateDoc(userRef, {
-        role: "user",
+        role: "user2",
       });
 
       toast.success(`Admin access removed for ${confirmModal.adminEmail}`);
